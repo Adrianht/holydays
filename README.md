@@ -1,3 +1,3 @@
 # holydays
 
-Live at [holydays.adrianht.no](https://www.holydays.adrianht.no/)
+Live at [holydays.adrianht.no](https://holydays.adrianht.no/)
