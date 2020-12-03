@@ -2,10 +2,10 @@
   <section class="next-holydays-container">
     <h1>Neste holyday</h1>
     <template v-if="holydays !== null">
-      <div 
-        v-for="(holyday, index) in holydays" 
-        class="next-holyday-card" 
-        :key="index" 
+      <div
+        v-for="(holyday, index) in holydays"
+        class="next-holyday-card"
+        :key="index"
         :class="index === 0 ? 'first' : ''"
       >
         <p class="days-until"> Om {{calcDays(holyday.date)}} dager</p>
@@ -22,8 +22,7 @@
 <script>
 import { fetchNextHoliday } from '@/utils/fetchApi.js';
 import { ref, onMounted } from 'vue';
-import { differenceInDays } from 'date-fns'
-
+import { differenceInDays } from 'date-fns';
 
 export default {
   setup() {
@@ -39,7 +38,7 @@ export default {
       const next = new Date(holydayDate);
       const today = new Date();
 
-      return differenceInDays(next, today) + 1
+      return differenceInDays(next, today) + 1;
     }
 
     return { holydays, calcDays };
@@ -70,7 +69,6 @@ h1 {
   justify-content: center;
   align-items: center;
   font-size: 24px;
-
 
   &.first {
     font-weight: 700;

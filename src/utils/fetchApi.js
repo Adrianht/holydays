@@ -3,7 +3,7 @@
 // return fetch(`https://date.nager.at/api/v2/LongWeekend/${year}/NO`)
 
 export async function fetchHolidays(year) {
-  return fetch(`http://localhost:3000/allHolidays?year=${year}`,)
+  return fetch(`http://localhost:3000/allHolidays?year=${year}`)
     .then((response) => response.json())
     .then((res) => res)
     .catch((err) => {

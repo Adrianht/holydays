@@ -3,112 +3,167 @@
     <div v-if="nextYears !== null">
       <button v-for="year in nextYears" :key="year" class="button" @click="fetchYear(year)">{{year}}</button>
     </div>
+
     <div class="info">
       <h1>Long weekends</h1>
       <div class="green"></div>
-      <span>Holyday</span>
+      <span>Holyday or weekend</span>
       <div class="yellow"></div>
       <span>Need to use vacation day</span>
     </div>
-    
+
     <div class="weekends-container">
-      <div v-for="(weekend, index) in weekends" :key="'asd' + index" class="weekend">
-        <div v-for="day in weekend.dayCount" class="single-day" :class="checkBridge(weekend, day)">
-          <p>{{dayName(weekend, day)}}</p>
+      <div v-for="(weekend, index) in weekends" :key="'asd' + index" class="single-weekend">
+        <p class="weekend-title"> Long weekend {{index + 1}} </p>
+        <div class="weekend">
+          <div v-for="day in weekend.dayCount" class="single-day" :class="checkBridge(weekend, day)">
+            <p>{{dayName(weekend, day)}}</p>
+          </div>
         </div>
       </div>
     </div>
-    
+
+    <button @click="icsExport">Export weekends to ics file</button>
   </section>
   <section v-else>
     Loading...
   </section>
+
 </template>
 
 <script>
 import { fetchLongWeekend, fetchHolidays } from '@/utils/fetchApi.js';
 import { ref, onMounted } from 'vue';
-import { eachDayOfInterval, parseISO, format, isWithinInterval, isWeekend, addYears, getYear } from 'date-fns'
+import {
+  eachDayOfInterval, parseISO, format, isWithinInterval, isWeekend, addYears, getYear,
+} from 'date-fns';
 
 export default {
   setup() {
     const weekends = ref(null);
     const holidays = ref(null);
-    const nextYears = ref(null)
+    const nextYears = ref(null);
+    const chosenYear = ref(2020)
 
     onMounted(() => {
-      nextYears.value = calcYears()
-      fetchLongWeekend(2020)
-        .then(res => weekends.value = res)
-      fetchHolidays(2020)
-        .then(res => holidays.value = onlyDates(res))
+      nextYears.value = calcYears();
+      fetchLongWeekend(chosenYear.value)
+        .then((res) => weekends.value = res);
+      fetchHolidays(chosenYear.value)
+        .then((res) => holidays.value = onlyDates(res));
     });
 
-    function onlyDates(arr){
-      let dates = [];
-      arr.forEach(element => {
-        dates.push(format(parseISO(element.date), 'dd/MM/yyyy'))
+    function onlyDates(arr) {
+      const dates = [];
+      arr.forEach((element) => {
+        dates.push(format(parseISO(element.date), 'dd/MM/yyyy'));
       });
       return dates;
     }
 
     function allDays(weekend) {
-      let start = parseISO(weekend.startDate);
-      let end = parseISO(weekend.endDate);
-      return eachDayOfInterval({start: start, end: end})
+      const start = parseISO(weekend.startDate);
+      const end = parseISO(weekend.endDate);
+      return eachDayOfInterval({ start, end });
     }
 
-    function dayName(weekend, day){
-      let all = allDays(weekend)
-      return format(all[day - 1], 'eeee dd, MMMM')
+    function dayName(weekend, day) {
+      const all = allDays(weekend);
+      return format(all[day - 1], 'eeee dd, MMMM');
     }
 
-    function checkBridge(weekend, day){
-      if(!weekend.needBridgeDay){
+    function checkBridge(weekend, day) {
+      if (!weekend.needBridgeDay) {
         return;
       }
 
-      let all = allDays(weekend);
-      let currentDay = format(all[day -1], 'dd/MM/yyyy');
-      let exists = holidays.value.includes(currentDay); 
-      if(exists){
-        return;
-      }
-      
-      let localDay = all[day - 1];
-      let checkWeekend = isWeekend(localDay);
-
-      if(checkWeekend){
+      const all = allDays(weekend);
+      const currentDay = format(all[day - 1], 'dd/MM/yyyy');
+      const exists = holidays.value.includes(currentDay);
+      if (exists) {
         return;
       }
 
-      return 'bridge-day'
+      const localDay = all[day - 1];
+      const checkWeekend = isWeekend(localDay);
+
+      if (checkWeekend) {
+        return;
+      }
+
+      return 'bridge-day';
     }
 
     function fetchYear(year) {
-      fetchLongWeekend(year)
-        .then(res => weekends.value = res)
-      fetchHolidays(year)
-        .then(res => holidays.value = onlyDates(res))
+      if(chosenYear.value === year){
+        return;
+      } else {
+        chosenYear.value = year
+        fetchLongWeekend(year)
+          .then((res) => weekends.value = res);
+        fetchHolidays(year)
+          .then((res) => holidays.value = onlyDates(res));
+      }
     }
 
-    return { weekends, dayName, holidays, checkBridge, nextYears, fetchYear }
+    function dayIsBridge(weekend, day) {
+      const currentDay = format(day, 'dd/MM/yyyy');
+      const exists = holidays.value.includes(currentDay);
+      if (exists) {
+        return false;
+      }
+      const checkWeekend = isWeekend(day);
+      if (checkWeekend) {
+        return false;
+      }
+      return true
+    }
+
+    function icsExport() {
+      let cal = ics();
+      let exportAbleDates = []
+      weekends.value.forEach(weekend => {
+        let allDaysInWeekend = allDays(weekend);
+        allDaysInWeekend.forEach(day => {
+          let dayIsb = dayIsBridge(allDaysInWeekend, day);
+          exportAbleDates.push(
+            {
+              day: day,
+              bridge: dayIsb
+            }
+          )
+        });
+      });
+      exportAbleDates.forEach(day => {
+        let formattedDay = format(day.day, 'MM/dd/yyyy');
+        if(day.bridge){
+          cal.addEvent('Long Weekend! (BRIDGE-DAY)', 'If you use a vacation-day here you will get a long weekend! Exported from holydays.adrianht.no', 'Holyday', formattedDay, formattedDay);
+        } else {
+          cal.addEvent('Long Weekend!', 'Part of a long weekend! Exported from holydays.adrianht.no', 'Holyday', formattedDay, formattedDay);
+        }
+      });
+      cal.download();
+    }
+
+    return {
+      weekends, dayName, holidays, checkBridge, nextYears, fetchYear, icsExport
+    };
   },
 };
 
+
+
 function calcYears() {
   let currentDate = new Date();
-  let yearArray = [];
+  const yearArray = [];
 
   for (let index = 0; index < 5; index++) {
-    yearArray.push(getYear(currentDate))
-    currentDate = addYears(currentDate, 1)
+    yearArray.push(getYear(currentDate));
+    currentDate = addYears(currentDate, 1);
   }
 
   return yearArray;
 }
-
-
 
 </script>
 
@@ -119,6 +174,10 @@ function calcYears() {
   display: grid;
   grid-gap: 2em;
   place-items: center;
+}
+
+.single-weekend{
+  margin-top: 3em;
 }
 
 .weekend {

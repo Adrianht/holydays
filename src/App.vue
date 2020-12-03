@@ -1,5 +1,7 @@
 <template>
-  <router-view/>
+  <main>
+    <router-view/>
+  </main>
 </template>
 
 <script>
@@ -27,6 +29,10 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+main{
+  margin: 5rem 0;
 }
 
 </style>

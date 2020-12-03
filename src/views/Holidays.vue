@@ -11,7 +11,7 @@ export default {
   name: 'Holidays',
   components: {
     NextHoliday,
-    LongWeekend
+    LongWeekend,
   },
 };
 </script>
