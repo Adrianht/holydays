@@ -32,7 +32,9 @@
 </template>
 
 <script>
-import { fetchLongWeekend, fetchHolidays } from '@/utils/fetchApi.js';
+// import { fetchHolidays } from '/.netlify/functions/fetchHolidays';
+// import { fetchLongWeekend } from '../../functions/fetchLongWeekend/fetchLongWeekend';
+
 import { ref, onMounted } from 'vue';
 import {
   eachDayOfInterval, parseISO, format, isWithinInterval, isWeekend, addYears, getYear,
@@ -47,10 +49,12 @@ export default {
 
     onMounted(() => {
       nextYears.value = calcYears();
-      fetchLongWeekend(chosenYear.value)
-        .then((res) => weekends.value = res);
-      fetchHolidays(chosenYear.value)
-        .then((res) => holidays.value = onlyDates(res));
+      fetch(`/.netlify/functions/fetchLongWeekend?year=${2020}`, { headers: { accept: 'Accept: application/json' } })
+        .then((res) => res.json())
+        .then((res) => weekends.value = res.data);
+      fetch(`/.netlify/functions/fetchHolidays?year=${2020}`, { headers: { accept: 'Accept: application/json' } })
+        .then((res) => res.json())
+        .then((res) => holidays.value = onlyDates(res.data));
     });
 
     function onlyDates(arr) {
@@ -99,10 +103,12 @@ export default {
 
       } else {
         chosenYear.value = year;
-        fetchLongWeekend(year)
-          .then((res) => weekends.value = res);
-        fetchHolidays(year)
-          .then((res) => holidays.value = onlyDates(res));
+        fetch(`/.netlify/functions/fetchLongWeekend?year=${year}`, { headers: { accept: 'Accept: application/json' } })
+          .then((res) => res.json())
+          .then((res) => weekends.value = res.data);
+        fetch(`/.netlify/functions/fetchHolidays?year=${year}`, { headers: { accept: 'Accept: application/json' } })
+          .then((res) => res.json())
+          .then((res) => holidays.value = onlyDates(res.data));
       }
     }
 
