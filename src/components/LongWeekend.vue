@@ -43,7 +43,7 @@ export default {
     const weekends = ref(null);
     const holidays = ref(null);
     const nextYears = ref(null);
-    const chosenYear = ref(2020)
+    const chosenYear = ref(2020);
 
     onMounted(() => {
       nextYears.value = calcYears();
@@ -95,10 +95,10 @@ export default {
     }
 
     function fetchYear(year) {
-      if(chosenYear.value === year){
-        return;
+      if (chosenYear.value === year) {
+
       } else {
-        chosenYear.value = year
+        chosenYear.value = year;
         fetchLongWeekend(year)
           .then((res) => weekends.value = res);
         fetchHolidays(year)
@@ -116,27 +116,27 @@ export default {
       if (checkWeekend) {
         return false;
       }
-      return true
+      return true;
     }
 
     function icsExport() {
-      let cal = ics();
-      let exportAbleDates = []
-      weekends.value.forEach(weekend => {
-        let allDaysInWeekend = allDays(weekend);
-        allDaysInWeekend.forEach(day => {
-          let dayIsb = dayIsBridge(allDaysInWeekend, day);
+      const cal = ics();
+      const exportAbleDates = [];
+      weekends.value.forEach((weekend) => {
+        const allDaysInWeekend = allDays(weekend);
+        allDaysInWeekend.forEach((day) => {
+          const dayIsb = dayIsBridge(allDaysInWeekend, day);
           exportAbleDates.push(
             {
-              day: day,
-              bridge: dayIsb
-            }
-          )
+              day,
+              bridge: dayIsb,
+            },
+          );
         });
       });
-      exportAbleDates.forEach(day => {
-        let formattedDay = format(day.day, 'MM/dd/yyyy');
-        if(day.bridge){
+      exportAbleDates.forEach((day) => {
+        const formattedDay = format(day.day, 'MM/dd/yyyy');
+        if (day.bridge) {
           cal.addEvent('Long Weekend! (BRIDGE-DAY)', 'If you use a vacation-day here you will get a long weekend! Exported from holydays.adrianht.no', 'Holyday', formattedDay, formattedDay);
         } else {
           cal.addEvent('Long Weekend!', 'Part of a long weekend! Exported from holydays.adrianht.no', 'Holyday', formattedDay, formattedDay);
@@ -146,12 +146,10 @@ export default {
     }
 
     return {
-      weekends, dayName, holidays, checkBridge, nextYears, fetchYear, icsExport
+      weekends, dayName, holidays, checkBridge, nextYears, fetchYear, icsExport,
     };
   },
 };
-
-
 
 function calcYears() {
   let currentDate = new Date();
