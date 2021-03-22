@@ -1,7 +1,12 @@
 <template>
   <section v-if="weekends !== null && holidays !== null" class="container">
     <div v-if="nextYears !== null">
-      <button v-for="year in nextYears" :key="year" class="button" @click="fetchYear(year)">{{year}}</button>
+      <button
+        v-for="year in nextYears"
+        :key="year" class="button"
+        @click="fetchYear(year)">
+        {{year}}
+      </button>
     </div>
 
     <div class="info">
@@ -16,7 +21,12 @@
       <div v-for="(weekend, index) in weekends" :key="'asd' + index" class="single-weekend">
         <p class="weekend-title"> Long weekend {{index + 1}} </p>
         <div class="weekend">
-          <div v-for="day in weekend.dayCount" class="single-day" :class="checkBridge(weekend, day)">
+          <div
+            v-for="day in weekend.dayCount"
+            class="single-day"
+            :class="checkBridge(weekend, day)"
+            :key="day"
+          >
             <p>{{dayName(weekend, day)}}</p>
           </div>
         </div>
@@ -32,27 +42,38 @@
 </template>
 
 <script>
-// import { fetchHolidays } from '/.netlify/functions/fetchHolidays';
-// import { fetchLongWeekend } from '../../functions/fetchLongWeekend/fetchLongWeekend';
 
 import { ref, onMounted } from 'vue';
 import {
-  eachDayOfInterval, parseISO, format, isWithinInterval, isWeekend, addYears, getYear,
+  eachDayOfInterval, parseISO, format, isWeekend, addYears, getYear,
 } from 'date-fns';
+
+function calcYears() {
+  let currentDate = new Date();
+  const yearArray = [];
+
+  for (let index = 0; index < 5; index += 1) {
+    yearArray.push(getYear(currentDate));
+    currentDate = addYears(currentDate, 1);
+  }
+
+  return yearArray;
+}
 
 export default {
   setup() {
     const weekends = ref(null);
     const holidays = ref(null);
     const nextYears = ref(null);
-    const chosenYear = ref(2020);
+    const year = getYear(new Date());
+    const chosenYear = ref(year);
 
     onMounted(() => {
       nextYears.value = calcYears();
-      fetch(`/.netlify/functions/fetchLongWeekend?year=${2020}`, { headers: { accept: 'Accept: application/json' } })
+      fetch(`/.netlify/functions/fetchLongWeekend?year=${chosenYear.value}`, { headers: { accept: 'Accept: application/json' } })
         .then((res) => res.json())
         .then((res) => weekends.value = res.data);
-      fetch(`/.netlify/functions/fetchHolidays?year=${2020}`, { headers: { accept: 'Accept: application/json' } })
+      fetch(`/.netlify/functions/fetchHolidays?year=${chosenYear.value}`, { headers: { accept: 'Accept: application/json' } })
         .then((res) => res.json())
         .then((res) => holidays.value = onlyDates(res.data));
     });
@@ -99,17 +120,13 @@ export default {
     }
 
     function fetchYear(year) {
-      if (chosenYear.value === year) {
-
-      } else {
-        chosenYear.value = year;
-        fetch(`/.netlify/functions/fetchLongWeekend?year=${year}`, { headers: { accept: 'Accept: application/json' } })
-          .then((res) => res.json())
-          .then((res) => weekends.value = res.data);
-        fetch(`/.netlify/functions/fetchHolidays?year=${year}`, { headers: { accept: 'Accept: application/json' } })
-          .then((res) => res.json())
-          .then((res) => holidays.value = onlyDates(res.data));
-      }
+      chosenYear.value = year;
+      fetch(`/.netlify/functions/fetchLongWeekend?year=${year}`, { headers: { accept: 'Accept: application/json' } })
+        .then((res) => res.json())
+        .then((res) => weekends.value = res.data);
+      fetch(`/.netlify/functions/fetchHolidays?year=${year}`, { headers: { accept: 'Accept: application/json' } })
+        .then((res) => res.json())
+        .then((res) => holidays.value = onlyDates(res.data));
     }
 
     function dayIsBridge(weekend, day) {
@@ -156,18 +173,6 @@ export default {
     };
   },
 };
-
-function calcYears() {
-  let currentDate = new Date();
-  const yearArray = [];
-
-  for (let index = 0; index < 5; index++) {
-    yearArray.push(getYear(currentDate));
-    currentDate = addYears(currentDate, 1);
-  }
-
-  return yearArray;
-}
 
 </script>
 
